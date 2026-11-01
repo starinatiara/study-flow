@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'theme/app_theme.dart';
-import 'screens/login_screen.dart';
+import 'theme/app_colors.dart';
+import 'pages/login_page.dart';
 
-void main() {
-  runApp(const StudyFlowApp());
-}
+void main() => runApp(const StudyFlowApp());
 
 class StudyFlowApp extends StatelessWidget {
   const StudyFlowApp({super.key});
@@ -14,8 +12,12 @@ class StudyFlowApp extends StatelessWidget {
     return MaterialApp(
       title: 'Study Flow',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-        home: const LoginScreen(),
+      theme: ThemeData(
+        scaffoldBackgroundColor: AppColors.cream,
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.button),
+        useMaterial3: true,
+      ),
+      home: const LoginPage(),
     );
   }
 }
