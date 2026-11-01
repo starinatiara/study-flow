@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const StudyFlowApp());
@@ -15,7 +15,7 @@ class StudyFlowApp extends StatelessWidget {
       title: 'Study Flow',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const DashboardScreen(),
+        home: const LoginScreen(),
     );
   }
 }
