@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/common_widgets.dart';
 import 'edit_task_page.dart';
+import 'profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -22,7 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Progres minggu ini', style: TextStyle(fontSize: 9, color: AppColors.grey)),
+          const Text('Progres', style: TextStyle(fontSize: 9, color: AppColors.grey)),
           const SizedBox(height: 2),
           const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text('2 dari 5 tugas selesai', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
@@ -99,8 +100,22 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 14, 20, 16),
           decoration: const BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.vertical(bottom: Radius.circular(24))),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Study Flow', style: TextStyle(fontSize: 10)),
-            const Text('Tugas Saya', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+            Row(children: [
+              const Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Study Flow', style: TextStyle(fontSize: 10)),
+                  Text('Tugas Saya', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                ]),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
+                child: Container(
+                  width: 38, height: 38,
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: const Icon(Icons.person, size: 22, color: AppColors.dark),
+                ),
+              ),
+            ]),
             const SizedBox(height: 12),
             _progressCard(),
           ]),

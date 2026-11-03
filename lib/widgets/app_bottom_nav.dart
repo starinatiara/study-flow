@@ -20,17 +20,17 @@ class AppBottomNav extends StatelessWidget {
 
   Widget _item(BuildContext context, int i, IconData icon, String label) {
     final active = i == current;
-    final home = i == 1;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => _go(context, i),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Menu yang sedang aktif diberi lingkaran kuning
           Container(
-            width: home ? 40 : 28, height: home ? 40 : 28,
+            width: 40, height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: home ? (active ? AppColors.button : AppColors.yellow.withOpacity(.5)) : Colors.transparent,
+              color: active ? AppColors.button : Colors.transparent,
             ),
             child: Icon(icon, size: 20, color: AppColors.dark),
           ),
