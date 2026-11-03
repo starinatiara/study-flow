@@ -56,9 +56,11 @@ class AuthScaffold extends StatelessWidget {
 class AppTextField extends StatelessWidget {
   final String label, hint;
   final IconData? icon;
-  final bool obscure, multiline;
+  final bool obscure, multiline, readOnly;
   final TextEditingController? controller;
-  const AppTextField({super.key, required this.label, required this.hint, this.icon, this.obscure = false, this.multiline = false, this.controller});
+  final VoidCallback? onTap;
+  final IconData? suffixIcon;
+  const AppTextField({super.key, required this.label, required this.hint, this.icon, this.obscure = false, this.multiline = false, this.controller, this.readOnly = false, this.onTap, this.suffixIcon});
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +71,8 @@ class AppTextField extends StatelessWidget {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
+          readOnly: readOnly,
+          onTap: onTap,
           obscureText: obscure,
           maxLines: obscure ? 1 : (multiline ? 4 : 1),
           style: const TextStyle(fontSize: 12),
@@ -77,6 +81,7 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 12, color: AppColors.grey),
             prefixIcon: icon == null ? null : Icon(icon, size: 18, color: AppColors.dark),
+            suffixIcon: suffixIcon == null ? null : Icon(suffixIcon, size: 18, color: AppColors.dark),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
