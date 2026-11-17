@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'pages/login_page.dart';
 
-void main() => runApp(const StudyFlowApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const StudyFlowApp());
+}
 
 class StudyFlowApp extends StatelessWidget {
   const StudyFlowApp({super.key});

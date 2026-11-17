@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/common_widgets.dart';
-import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'register_page.dart';
 import 'dashboard_page.dart';
 
@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _loading = true);
-    final hasil = await ApiService.login(email, pass);
+    final hasil = await AuthService.login(email, pass);
     if (!mounted) return;
     setState(() => _loading = false);
 
