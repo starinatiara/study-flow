@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/common_widgets.dart';
-import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -55,7 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     setState(() => _loading = true);
-    final hasil = await ApiService.register(nama, email, pass);
+    final hasil = await AuthService.register(nama, email, pass);
     if (!mounted) return;
     setState(() => _loading = false);
 
