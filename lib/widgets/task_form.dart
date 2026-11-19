@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import '../models/task_model.dart';
 import '../theme/app_colors.dart';
 import 'common_widgets.dart';
 
 /// Form dipakai bersama oleh halaman Tambah & Edit Tugas
 class TaskForm extends StatefulWidget {
-  final String title, course, deadline;
+  final String title, course, deadline, catatan;
   final bool done;
   final String saveText;
-  final VoidCallback onSave;
+  final Future<void> Function(TaskFormData data) onSave;
   final VoidCallback? onDelete;
   const TaskForm({
-    super.key, this.title = '', this.course = '', this.deadline = '', this.done = false,
+    super.key, this.title = '', this.course = '', this.deadline = '', this.catatan = '', this.done = false,
     required this.saveText, required this.onSave, this.onDelete,
   });
 
@@ -23,7 +24,9 @@ class _TaskFormState extends State<TaskForm> {
   late final _title = TextEditingController(text: widget.title);
   late final _course = TextEditingController(text: widget.course);
   late final _deadline = TextEditingController(text: widget.deadline);
+  late final _catatan = TextEditingController(text: widget.catatan);
   DateTime? _date;
+  bool _saving = false;
 
   static const _bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -40,6 +43,43 @@ class _TaskFormState extends State<TaskForm> {
     }
   }
 
+  @override
+  void dispose() {
+    _title.dispose();
+    _course.dispose();
+    _deadline.dispose();
+    _catatan.dispose();
+    super.dispose();
+  }
+
+  void _pesan(String teks) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(teks)));
+  }
+
+  Future<void> _simpan() async {
+    if (_saving) return;
+    final judul = _title.text.trim();
+    final course = _course.text.trim();
+    if (judul.isEmpty || course.isEmpty || _date == null) {
+      _pesan('Judul, mata kuliah, dan deadline wajib diisi');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(TaskFormData(
+        judul: judul,
+        mataKuliah: course,
+        deadline: _date!,
+        catatan: _catatan.text.trim(),
+        selesai: done,
+      ));
+    } catch (e) {
+      if (mounted) _pesan('Gagal menyimpan: $e');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   Future<void> _pickDate() async {
     final now = DateTime.now();
     DateTime temp = _date ?? now;
@@ -49,7 +89,6 @@ class _TaskFormState extends State<TaskForm> {
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(primary: AppColors.button, onPrimary: AppColors.dark, onSurface: AppColors.dark),
         ),
-        // Kalender ukuran kecil (kartu di tengah layar), bukan layar penuh
         child: Dialog(
           backgroundColor: Colors.white,
           insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
@@ -86,7 +125,7 @@ class _TaskFormState extends State<TaskForm> {
     );
     if (picked != null) {
       setState(() {
-        _date = picked;
+        _date = DateTime(picked.year, picked.month, picked.day);
         _deadline.text = '${picked.day} ${_bulan[picked.month - 1]} ${picked.year}';
       });
     }
@@ -128,7 +167,7 @@ class _TaskFormState extends State<TaskForm> {
               onTap: _pickDate,
               suffixIcon: Icons.calendar_today_outlined,
             ),
-            const AppTextField(label: 'Catatan', hint: 'Opsional', multiline: true),
+            AppTextField(label: 'Catatan', hint: 'Opsional', multiline: true, controller: _catatan),
             const Text('Status Pengerjaan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             Row(children: [_status('Belum Selesai', false), const SizedBox(width: 10), _status('Selesai', true)]),
@@ -138,7 +177,7 @@ class _TaskFormState extends State<TaskForm> {
       Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         child: Column(children: [
-          PrimaryButton(text: widget.saveText, onPressed: widget.onSave),
+          PrimaryButton(text: _saving ? 'Menyimpan...' : widget.saveText, onPressed: _simpan),
           if (widget.onDelete != null) ...[
             const SizedBox(height: 10),
             SizedBox(

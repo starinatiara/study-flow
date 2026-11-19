@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static Future<Map<String, dynamic>> register(
       String nama, String email, String password) async {
@@ -11,17 +13,32 @@ class AuthService {
         password: password,
       );
       await cred.user?.updateDisplayName(nama);
+
+      // Simpan profil ke Firestore (Document ID = uid).
+      // Harus sebelum signOut supaya masih terautentikasi.
+      await _db.collection('users').doc(cred.user!.uid).set({
+        'nama': nama,
+        'email': email,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
       // Daftar otomatis membuat pengguna login, jadi keluarkan dulu
       // supaya alurnya kembali ke halaman Login.
       await _auth.signOut();
       return {'status': true, 'message': 'Registrasi berhasil'};
     } on FirebaseAuthException catch (e) {
       return {'status': false, 'message': _pesan(e.code)};
+    } on FirebaseException catch (e) {
+      return {
+        'status': false,
+        'message': 'Gagal menyimpan profil (${e.code})',
+      };
     } catch (e) {
       return {'status': false, 'message': 'Terjadi kesalahan, coba lagi'};
     }
   }
 
+  // login() dan logout() TIDAK berubah
   static Future<Map<String, dynamic>> login(
       String email, String password) async {
     try {

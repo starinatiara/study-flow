@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/task_form.dart';
+import '../models/task_model.dart';
+import '../services/tugas_service.dart';
 
 class EditTaskPage extends StatelessWidget {
-  const EditTaskPage({super.key});
+  final Task task;
+  const EditTaskPage({super.key, required this.task});
 
   void _confirmDelete(BuildContext context) {
     showDialog(
@@ -24,10 +27,10 @@ class EditTaskPage extends StatelessWidget {
             const SizedBox(height: 12),
             const Text('Hapus tugas ini?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
-            const Text(
-              'Tugas "Proposal Project Flutter" akan dihapus dan tidak dapat dikembalikan.',
+            Text(
+              'Tugas "${task.title}" akan dihapus dan tidak dapat dikembalikan.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10, color: AppColors.grey),
+              style: const TextStyle(fontSize: 10, color: AppColors.grey),
             ),
             const SizedBox(height: 18),
             Row(children: [
@@ -45,8 +48,11 @@ class EditTaskPage extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await TugasService.hapus(task.id);
+                    if (!ctx.mounted) return;
                     Navigator.pop(ctx);
+                    if (!context.mounted) return;
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -71,12 +77,18 @@ class EditTaskPage extends StatelessWidget {
         const BackHeader('Edit Tugas'),
         Expanded(
           child: TaskForm(
-            title: 'Proposal Project Flutter',
-            course: 'Pemrograman Mobile',
-            deadline: '25 Oktober 2026',
+            title: task.title,
+            course: task.course,
+            deadline: Task.formatPanjang(task.deadline),
+            catatan: task.catatan,
+            done: task.done,
             saveText: 'Simpan Perubahan',
-            onSave: () => Navigator.pop(context),
-            onDelete: () => _confirmDelete(context),
+            onSave: (data) async {
+              await TugasService.ubah(task, data);
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            },
+              onDelete: () => _confirmDelete(context),
           ),
         ),
       ]),

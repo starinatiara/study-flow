@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
+import '../services/tugas_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/common_widgets.dart';
@@ -16,26 +17,36 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int filter = 0; // 0 semua, 1 belum, 2 selesai
   final filters = const ['Semua', 'Belum Selesai', 'Selesai'];
+  late final Stream<List<Task>> _stream = TugasService.daftar();
 
-  List<Task> get tasks => dummyTasks.where((t) => filter == 0 || (filter == 1 ? !t.done : t.done)).toList();
+  List<Task> _filtered(List<Task> all) =>
+      all.where((t) => filter == 0 || (filter == 1 ? !t.done : t.done)).toList();
 
-  Widget _progressCard() => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Progres', style: TextStyle(fontSize: 9, color: AppColors.grey)),
-          const SizedBox(height: 2),
-          const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('2 dari 5 tugas selesai', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-            Text('40%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          ]),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: const LinearProgressIndicator(value: .4, minHeight: 6, backgroundColor: Color(0xFFF1EAD0), color: AppColors.button),
-          ),
+  Widget _progressCard(List<Task> all) {
+    final selesai = all.where((t) => t.done).length;
+    final total = all.length;
+    final nilai = total == 0 ? 0.0 : selesai / total;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Progres', style: TextStyle(fontSize: 9, color: AppColors.grey)),
+        const SizedBox(height: 2),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('$selesai dari $total tugas selesai',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+          Text('${(nilai * 100).round()}%',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         ]),
-      );
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+              value: nilai, minHeight: 6, backgroundColor: const Color(0xFFF1EAD0), color: AppColors.button),
+        ),
+      ]),
+    );
+  }
 
   Widget _chip(int i) {
     final active = filter == i;
@@ -56,7 +67,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _taskCard(Task t) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditTaskPage())),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditTaskPage(task: t))),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
@@ -93,45 +104,62 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(children: [
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 14, 20, 16),
-          decoration: const BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.vertical(bottom: Radius.circular(24))),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              const Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Study Flow', style: TextStyle(fontSize: 10)),
-                  Text('Tugas Saya', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                ]),
-              ),
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
-                child: Container(
-                  width: 38, height: 38,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.person, size: 22, color: AppColors.dark),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 12),
-            _progressCard(),
-          ]),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-          child: Row(children: List.generate(3, _chip)),
-        ),
-        Expanded(
-          child: ListView(
+    return StreamBuilder<List<Task>>(
+      stream: _stream,
+      builder: (context, snap) {
+        final all = snap.data ?? [];
+        final tasks = _filtered(all);
+
+        Widget isi;
+        if (snap.hasError) {
+          isi = Center(child: Text('Gagal memuat tugas (${snap.error})', style: const TextStyle(fontSize: 11)));
+        } else if (snap.connectionState == ConnectionState.waiting) {
+          isi = const Center(child: CircularProgressIndicator());
+        } else if (tasks.isEmpty) {
+          isi = const Center(child: Text('Belum ada tugas', style: TextStyle(fontSize: 11, color: AppColors.grey)));
+        } else {
+          isi = ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: tasks.map(_taskCard).toList(),
-          ),
-        ),
-      ]),
-      bottomNavigationBar: const AppBottomNav(current: 1),
+          );
+        }
+
+        return Scaffold(
+          body: Column(children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 14, 20, 16),
+              decoration: const BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.vertical(bottom: Radius.circular(24))),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  const Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Study Flow', style: TextStyle(fontSize: 10)),
+                      Text('Tugas Saya', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                    ]),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
+                    child: Container(
+                      width: 38, height: 38,
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: const Icon(Icons.person, size: 22, color: AppColors.dark),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                _progressCard(all),
+              ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+              child: Row(children: List.generate(3, _chip)),
+            ),
+            Expanded(child: isi),
+          ]),
+          bottomNavigationBar: const AppBottomNav(current: 1),
+        );
+      },
     );
   }
 }

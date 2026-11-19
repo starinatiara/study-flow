@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/tugas_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/task_form.dart';
 import 'dashboard_page.dart';
@@ -14,7 +15,14 @@ class AddTaskPage extends StatelessWidget {
         Expanded(
           child: TaskForm(
             saveText: 'Simpan Tugas',
-            onSave: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage())),
+            onSave: (data) async {
+              await TugasService.tambah(data);
+              if (!context.mounted) return;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardPage()),
+              );
+            },
           ),
         ),
       ]),
